@@ -1,0 +1,43 @@
+# ========================
+# Ortam & Gizli Dosyalar
+# ========================
+.env
+.env.local
+.env.*.local
+**/secrets/
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/firebase-adminsdk*.json
+
+# ========================
+# .NET
+# ========================
+**/bin/
+**/obj/
+**/out/
+**/*.user
+**/.vs/
+
+# ========================
+# Node.js
+# ========================
+**/node_modules/
+**/dist/
+**/build/
+**/.vite/
+npm-debug.log*
+
+# ========================
+# İşletim Sistemi
+# ========================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ========================
+# IDE
+# ========================
+.vscode/
+.idea/
+*.suo
+*.swp

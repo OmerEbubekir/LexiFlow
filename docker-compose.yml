@@ -1,0 +1,161 @@
+# =============================================================
+# LearnLanguage — Docker Compose (Production)
+# =============================================================
+# Kullanım:
+#   docker compose --env-file .env up -d --build
+#
+# Durdurma:
+#   docker compose down
+#
+# Verileri de silmek için:
+#   docker compose down -v
+# =============================================================
+
+name: learnlanguage
+
+services:
+
+  # -----------------------------------------------------------
+  # PostgreSQL Veritabanı
+  # -----------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: learnlanguage-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-LearnLanguageDb}
+      POSTGRES_USER:     ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}   # .env'den gelmeli
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"   # Sadece development'ta dışarı açık; production'da kaldırın
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-LearnLanguageDb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - learnlanguage-net
+
+  # -----------------------------------------------------------
+  # .NET 8 Backend API
+  # -----------------------------------------------------------
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: learnlanguage-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Veritabanı
+      ConnectionStrings__DefaultConnection: >-
+        Host=db;Port=5432;Database=${POSTGRES_DB:-LearnLanguageDb};
+        Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+
+      # ASP.NET Core
+      ASPNETCORE_ENVIRONMENT:     Production
+      ASPNETCORE_URLS:            http://+:8080
+
+      # Firebase
+      Firebase__ProjectId:        ${FIREBASE_PROJECT_ID}
+      Firebase__ServiceAccountKeyPath: /app/secrets/firebase-adminsdk.json
+
+      # Gemini API
+      GeminiApi__ApiKey:          ${GEMINI_API_KEY}
+      GeminiApi__BaseUrl:         https://generativelanguage.googleapis.com
+      GeminiApi__Model:           gemini-1.5-flash
+
+      # Rate Limiting
+      RateLimit__PermitLimit:     ${RATE_LIMIT_PERMIT:-100}
+      RateLimit__WindowSeconds:   ${RATE_LIMIT_WINDOW:-60}
+    volumes:
+      # Firebase Service Account dosyasını container'a mount et
+      - ${FIREBASE_SERVICE_ACCOUNT_PATH}:/app/secrets/firebase-adminsdk.json:ro
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - learnlanguage-net
+
+  # -----------------------------------------------------------
+  # React + Vite Web UI (Nginx ile sunuluyor)
+  # -----------------------------------------------------------
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL:                   ${VITE_API_BASE_URL}
+        VITE_FIREBASE_API_KEY:               ${VITE_FIREBASE_API_KEY}
+        VITE_FIREBASE_AUTH_DOMAIN:           ${VITE_FIREBASE_AUTH_DOMAIN}
+        VITE_FIREBASE_PROJECT_ID:            ${FIREBASE_PROJECT_ID}
+        VITE_FIREBASE_STORAGE_BUCKET:        ${VITE_FIREBASE_STORAGE_BUCKET}
+        VITE_FIREBASE_MESSAGING_SENDER_ID:   ${VITE_FIREBASE_MESSAGING_SENDER_ID}
+        VITE_FIREBASE_APP_ID:                ${VITE_FIREBASE_APP_ID}
+    container_name: learnlanguage-web
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-80}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - learnlanguage-net
+
+  # -----------------------------------------------------------
+  # pgAdmin (Opsiyonel — Veritabanı yönetim paneli)
+  # Profile ile kontrol edilir: sadece "tools" profili ile çalışır
+  # Başlatmak için: docker compose --profile tools up -d
+  # -----------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: learnlanguage-pgadmin
+    restart: unless-stopped
+    profiles:
+      - tools
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    ${PGADMIN_EMAIL:-admin@learnlanguage.dev}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - learnlanguage-net
+
+# =============================================================
+# Named Volumes
+# =============================================================
+volumes:
+  postgres_data:
+    name: learnlanguage_postgres_data
+  pgadmin_data:
+    name: learnlanguage_pgadmin_data
+
+# =============================================================
+# Networks
+# =============================================================
+networks:
+  learnlanguage-net:
+    name: learnlanguage-net
+    driver: bridge

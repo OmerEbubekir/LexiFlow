@@ -1,0 +1,90 @@
+# =============================================================
+# LearnLanguage — Docker Compose Override (Development)
+# =============================================================
+# Bu dosya otomatik olarak docker-compose.yml üzerine uygulanır.
+# Sadece geliştirme sırasında kullanın; production'da bu dosyayı
+# dahil etmeyin.
+#
+# Kullanım (development):
+#   docker compose up -d --build
+#
+# Kullanım (production — override olmadan):
+#   docker compose -f docker-compose.yml up -d --build
+# =============================================================
+
+name: learnlanguage
+
+services:
+
+  # -----------------------------------------------------------
+  # Database — development'ta port 5432 zaten açık, ek ayar yok
+  # -----------------------------------------------------------
+  db:
+    environment:
+      POSTGRES_PASSWORD: devpassword   # Development için sabit şifre
+    ports:
+      - "5432:5432"
+
+  # -----------------------------------------------------------
+  # Backend — Development modu, hot-reload ve debug portu
+  # -----------------------------------------------------------
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile.dev      # Development Dockerfile (aşağıda)
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: >-
+        Host=db;Port=5432;Database=LearnLanguageDb;
+        Username=postgres;Password=devpassword
+      Firebase__ProjectId: ${FIREBASE_PROJECT_ID}
+      Firebase__ServiceAccountKeyPath: /app/secrets/firebase-adminsdk.json
+      GeminiApi__ApiKey: ${GEMINI_API_KEY}
+      GeminiApi__BaseUrl: https://generativelanguage.googleapis.com
+      GeminiApi__Model: gemini-1.5-flash
+    volumes:
+      # Kaynak kodunu mount et — dotnet watch hot-reload için
+      - ./apps/backend/src:/app/src
+      - ${FIREBASE_SERVICE_ACCOUNT_PATH}:/app/secrets/firebase-adminsdk.json:ro
+    ports:
+      - "8080:8080"   # HTTP
+      - "8081:8081"   # HTTPS (geliştirme sertifikası ile)
+    # Production healthcheck'i devre dışı bırak; geliştirmede yavaş başlar
+    healthcheck:
+      disable: true
+
+  # -----------------------------------------------------------
+  # Web — Development'ta Vite dev server (hot-reload)
+  # NOT: Bu servis production Dockerfile'ı değil, node'u direkt çalıştırır
+  # -----------------------------------------------------------
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile.dev
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080/api
+      VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY}
+      VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN}
+      VITE_FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID}
+      VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID}
+      CHOKIDAR_USEPOLLING: "true"   # Windows/WSL'de dosya izleme için
+    volumes:
+      # Hot-reload için kaynak kodu mount et
+      - ./apps/web/src:/app/src
+      - ./apps/web/public:/app/public
+      # node_modules'ü container'ın kendi katmanından al (mount etme!)
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: npm run dev -- --host 0.0.0.0
+    healthcheck:
+      disable: true
+
+  # -----------------------------------------------------------
+  # pgAdmin — Development'ta her zaman açık
+  # -----------------------------------------------------------
+  pgadmin:
+    profiles: []   # Development'ta profil gerekmez, her zaman çalışır

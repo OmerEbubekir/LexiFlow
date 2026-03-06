@@ -1,0 +1,18 @@
+# ============================================================
+# Development Dockerfile — Web (Vite hot-reload)
+# docker-compose.override.yml tarafından kullanılır
+# ============================================================
+FROM node:20-alpine AS dev
+WORKDIR /app
+
+# Bağımlılık dosyalarını önce kopyala
+COPY package*.json ./
+RUN npm ci
+
+# Kaynak kod override.yml'deki volume mount ile gelir
+# COPY . .  ← bunu yapmıyoruz; volume mount daha hızlı
+
+EXPOSE 5173
+
+# Vite dev server tüm ağ arayüzlerini dinlesin (Docker erişimi için)
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

@@ -1,0 +1,27 @@
+# ============================================================
+# Development Dockerfile — Backend (.NET 8 hot-reload)
+# docker-compose.override.yml tarafından kullanılır
+# ============================================================
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS dev
+WORKDIR /app
+
+# EF Core CLI tools (migration çalıştırmak için)
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+# Bağımlılıkları önce yükle
+COPY ["src/WebApi/WebApi.csproj",                   "src/WebApi/"]
+COPY ["src/Core/Application/Application.csproj",    "src/Core/Application/"]
+COPY ["src/Core/Domain/Domain.csproj",              "src/Core/Domain/"]
+COPY ["src/Infrastructure/Infrastructure.csproj",   "src/Infrastructure/"]
+
+RUN dotnet restore "src/WebApi/WebApi.csproj"
+
+COPY . .
+
+EXPOSE 8080
+EXPOSE 8081
+
+# dotnet watch: kod değişikliklerini izle ve otomatik yeniden derle
+WORKDIR /app/src/WebApi
+ENTRYPOINT ["dotnet", "watch", "run", "--urls", "http://+:8080"]

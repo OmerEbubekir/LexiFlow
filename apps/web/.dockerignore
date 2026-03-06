@@ -1,0 +1,28 @@
+# Node Modülleri (container içinde yüklenir)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+
+# Build çıktıları
+dist/
+build/
+.vite/
+
+# Ortam değişken dosyaları (hassas bilgi içerir)
+.env
+.env.local
+.env.*.local
+
+# Geliştirici araçları
+.vscode/
+.idea/
+
+# İşletim Sistemi
+.DS_Store
+Thumbs.db
+
+# Test çıktıları
+coverage/
+
+# Loglama
+*.log

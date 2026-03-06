@@ -1,0 +1,27 @@
+# .NET Build Çıktıları
+**/bin/
+**/obj/
+**/out/
+
+# Development konfigürasyon dosyaları (hassas bilgi içerir)
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/secrets/
+
+# Geliştirici araçları
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+
+# Test projeleri
+**/*.Tests/
+**/*.Test/
+
+# Loglama
+**/*.log
+**/Logs/
+
+# İşletim Sistemi
+**/.DS_Store
+**/Thumbs.db
