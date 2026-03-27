@@ -1,0 +1,6 @@
+@LexiFlow.WebApi_HostAddress = http://localhost:5043
+
+GET {{LexiFlow.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
