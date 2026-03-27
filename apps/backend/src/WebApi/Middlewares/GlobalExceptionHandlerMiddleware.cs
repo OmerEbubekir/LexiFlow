@@ -1,0 +1,53 @@
+using System.Net;
+using System.Text.Json;
+using LexiFlow.Application.Common;
+
+namespace LexiFlow.WebApi.Middlewares;
+
+public class GlobalExceptionHandlerMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger<GlobalExceptionHandlerMiddleware> _logger;
+
+    public GlobalExceptionHandlerMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlerMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
+        {
+            await _next(context);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An unhandled exception has occurred.");
+            await HandleExceptionAsync(context, ex);
+        }
+    }
+
+    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    {
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+
+        // Custom application logic specific exceptions could be mapped to 400 Bad Request here
+        
+        var response = BaseResponse.FailureResponse(
+            System.Diagnostics.Debugger.IsAttached ? exception.Message : "An unexpected problem occurred."
+        );
+
+        var json = JsonSerializer.Serialize(response);
+        return context.Response.WriteAsync(json);
+    }
+}
+
+public static class GlobalExceptionHandlerMiddlewareExtensions
+{
+    public static IApplicationBuilder UseGlobalExceptionHandler(this IApplicationBuilder builder)
+    {
+        return builder.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+    }
+}
