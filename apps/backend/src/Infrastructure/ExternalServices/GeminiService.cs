@@ -1,11 +1,12 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using LexiFlow.Domain.Entities;
+using LexiFlow.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
 
 namespace LexiFlow.Infrastructure.ExternalServices;
 
-public class GeminiService
+public class GeminiService : IGeminiService
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;

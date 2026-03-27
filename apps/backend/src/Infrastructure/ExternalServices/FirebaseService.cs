@@ -2,9 +2,11 @@ using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Microsoft.Extensions.Configuration;
 
+using LexiFlow.Domain.Interfaces;
+
 namespace LexiFlow.Infrastructure.ExternalServices;
 
-public class FirebaseService
+public class FirebaseService : IFirebaseAuthService
 {
     private readonly IConfiguration _config;
     // FirebaseAuth instance could be resolved if properly registered.

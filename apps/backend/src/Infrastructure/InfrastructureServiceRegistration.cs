@@ -23,11 +23,11 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IReviewHistoryRepository, ReviewHistoryRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        services.AddSingleton<FirebaseService>();
+        services.AddSingleton<IFirebaseAuthService, FirebaseService>();
 
         var geminiBaseUrl = configuration["GeminiApi:BaseUrl"] ?? "https://generativelanguage.googleapis.com";
         
-        services.AddHttpClient<GeminiService>(client =>
+        services.AddHttpClient<IGeminiService, GeminiService>(client =>
         {
             client.BaseAddress = new Uri(geminiBaseUrl);
             client.DefaultRequestHeaders.Add("Accept", "application/json");
