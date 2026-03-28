@@ -19,7 +19,7 @@ public sealed class WordSample : BaseEntity
     /// </summary>
     public string? TurkishTranslation { get; private set; }
 
-    // ── Fabrika Metodu ──────────────────────────────────────────────────────
+    // ── Constructor Metodu ──────────────────────────────────────────────────────
 
     private WordSample() { }
 

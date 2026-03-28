@@ -10,13 +10,13 @@ public class GeminiService : IGeminiService
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
-    private readonly string _modelName;
+    private readonly string _baseUrl;
 
     public GeminiService(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
         _apiKey = configuration["GeminiApi:ApiKey"] ?? string.Empty;
-        _modelName = configuration["GeminiApi:Model"] ?? "gemini-1.5-flash";
+        _baseUrl = configuration["GeminiApi:BaseUrl"] ?? "https://generativelanguage.googleapis.com";
     }
 
     public async Task<string> GenerateStoryAsync(IEnumerable<string> words, string language)
@@ -38,9 +38,15 @@ public class GeminiService : IGeminiService
             }
         };
 
-        var requestUri = $"/v1beta/models/{_modelName}:generateContent?key={_apiKey}";
+        var requestUri = $"{_baseUrl.TrimEnd('/')}/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}";
+        
         var response = await _httpClient.PostAsJsonAsync(requestUri, requestBody);
-        response.EnsureSuccessStatusCode();
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            var err = await response.Content.ReadAsStringAsync();
+            throw new InvalidOperationException($"AI Generation Failed: {response.StatusCode}. Details: {err}");
+        }
 
         var responseJson = await response.Content.ReadAsStringAsync();
         using var jsonDoc = JsonDocument.Parse(responseJson);

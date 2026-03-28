@@ -30,4 +30,10 @@ public interface IWordRepository : IRepository<Word>
 
     /// <summary>Kelime zaten bu kullanıcıya eklenmiş mi kontrol eder.</summary>
     Task<bool> ExistsForUserAsync(Guid userId, string englishWord, CancellationToken cancellationToken = default);
+
+    Task DeleteSamplesAsync(IEnumerable<LexiFlow.Domain.Entities.WordSample> samples);
+
+    Task AddSamplesAsync(IEnumerable<LexiFlow.Domain.Entities.WordSample> samples);
+
+    Task<Word?> GetWordWithSamplesAsync(Guid id, CancellationToken cancellationToken);
 }

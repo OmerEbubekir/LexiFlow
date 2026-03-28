@@ -11,6 +11,13 @@ public class WordRepository : GenericRepository<Word>, IWordRepository
     {
     }
 
+    public async Task<Word?> GetWordWithSamplesAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return await DbContext.Words
+            .Include(w => w.Samples)
+            .FirstOrDefaultAsync(w => w.Id == id, cancellationToken);
+    }
+
     public async Task<(IReadOnlyList<Word> Items, int TotalCount)> GetPagedByUserIdAsync(
         Guid userId,
         int page,
@@ -71,5 +78,20 @@ public class WordRepository : GenericRepository<Word>, IWordRepository
     {
         var e = englishWord.ToLowerInvariant();
         return await DbContext.Words.AnyAsync(w => w.UserId == userId && w.EnglishWord == e, cancellationToken);
+    }
+
+    public Task DeleteSamplesAsync(IEnumerable<WordSample> samples)
+    {
+        DbContext.WordSamples.RemoveRange(samples);
+        return Task.CompletedTask;
+    }
+
+    public Task AddSamplesAsync(IEnumerable<WordSample> samples)
+    {
+        foreach (var sample in samples)
+        {
+            DbContext.Entry(sample).State = EntityState.Added;
+        }
+        return Task.CompletedTask;
     }
 }

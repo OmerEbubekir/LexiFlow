@@ -44,7 +44,7 @@ public class UpdateWordCommandHandler : IRequestHandler<UpdateWordCommand, BaseR
 
     public async Task<BaseResponse> Handle(UpdateWordCommand request, CancellationToken cancellationToken)
     {
-        var word = await _wordRepository.GetByIdAsync(request.WordId, cancellationToken);
+        var word = await _wordRepository.GetWordWithSamplesAsync(request.WordId, cancellationToken);
         
         if (word == null || word.UserId != request.UserId)
             return BaseResponse.FailureResponse("Word not found.");
@@ -57,14 +57,25 @@ public class UpdateWordCommandHandler : IRequestHandler<UpdateWordCommand, BaseR
             request.PictureUrl,
             request.AudioUrl);
 
-        // Clear existing samples and replace with new ones
-        word.Samples.Clear();
-        foreach (var sample in request.Samples)
+        if (word.Samples != null && word.Samples.Any())
         {
-            word.Samples.Add(WordSample.Create(word.Id, sample.SentenceText, sample.TurkishTranslation));
+            await _wordRepository.DeleteSamplesAsync(word.Samples.ToList());
+            word.Samples.Clear();
         }
 
-        _wordRepository.Update(word);
+        var newSamples = new List<WordSample>();
+        foreach (var sample in request.Samples)
+        {
+            var newSample = WordSample.Create(word.Id, sample.SentenceText, sample.TurkishTranslation);
+            word.Samples!.Add(newSample);
+            newSamples.Add(newSample);
+        }
+
+        if (newSamples.Any())
+        {
+            await _wordRepository.AddSamplesAsync(newSamples);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return BaseResponse.SuccessResponse();
