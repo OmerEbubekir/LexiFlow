@@ -303,7 +303,7 @@ chore: bağımlılıklar güncellendi
 
 Backend geliştirimi (Faz 1-8) başarıyla tamamlandığı için proje artık kullanıcı arayüzlerinin inşasına geçmektedir. Aşama aşama ilerlenecek Monorepo Frontend mimari adımları şunlardır:
 
-### 🧩 Phase 9: `packages/shared` Altyapısının Kurulması
+### 🧩 Phase 9: `packages/shared` Altyapısının Kurulması (✅ TAMAMLANDI)
 Frontend mimarisinin omurgası. Web ve Mobil projelerinde kullanılacak ortak yapıların inşası.
 - **Tipler:** Backend API sözleşmesine uygun DTO'ların `types/` altında tanımlanması (Örn: `WordDto`, `AddWordCommand`, `GeminiStoryResponse`).
 - **API İstemcisi:** Axios instance ve Interceptor ayarları (Token ekleme, JIT provision, yetki hatası yakalama).
