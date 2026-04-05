@@ -299,6 +299,51 @@ chore: bağımlılıklar güncellendi
 
 ---
 
+## 🗺️ Frontend Geliştirme Yol Haritası (Phases)
+
+Backend geliştirimi (Faz 1-8) başarıyla tamamlandığı için proje artık kullanıcı arayüzlerinin inşasına geçmektedir. Aşama aşama ilerlenecek Monorepo Frontend mimari adımları şunlardır:
+
+### 🧩 Phase 9: `packages/shared` Altyapısının Kurulması
+Frontend mimarisinin omurgası. Web ve Mobil projelerinde kullanılacak ortak yapıların inşası.
+- **Tipler:** Backend API sözleşmesine uygun DTO'ların `types/` altında tanımlanması (Örn: `WordDto`, `AddWordCommand`, `GeminiStoryResponse`).
+- **API İstemcisi:** Axios instance ve Interceptor ayarları (Token ekleme, JIT provision, yetki hatası yakalama).
+- **Servis Katmanı:** Word, Quiz, Dashboard ve AI için ortak API çağrı fonksiyonları.
+- **State Yönetimi:** Zustand ile merkezi `useAuthStore` veya `useWordStore` yapıları (eğer framework-agnostic yapılabiliyorsa veya hooks olarak ayrılacaksa).
+
+### 🌐 Phase 10: `apps/web` Kimlik Doğrulama ve İskelet Yapı
+React + Vite projesi ayağa kaldırılıp temel iskelet oluşturulacak.
+- **Kurulum:** Tailwind CSS konfigürasyonu, React Router entegrası.
+- **Auth Modülü:** Firebase login/register sayfaları, Private Route hook'ları.
+- **Layout:** Sidebar, Navbar ve genel sayfa Container tasarımları.
+
+### 📚 Phase 11: `apps/web` Kelime Yönetimi ve Dashboard
+Temel uygulamanın kalbi.
+- **Dashboard:** Günlük öğrenme istatistikleri, Wordle ve hikaye oyunlarına giriş noktaları.
+- **Kelime Havuzu:** Sisteme kelime ekleme, silme, listeleme ve düzenleme (Table/Grid view).
+
+### 🧠 Phase 12: `apps/web` Spaced Repetition (6-Rep) ve Quiz
+Aralıklı tekrar algoritmasının arayüzü.
+- **Quiz Ekranı:** O gün tekrar edilmesi gereken (6-Rep SM-2 tabanlı) kelimelerin kart animasyonuyla ekrana gelmesi.
+- **Feedback Sistemi:** Kullanıcının tahmin başarı seviyesini (Ease Factor) gönderen butonlar (Zor, Normal, Kolay).
+
+### 🤖 Phase 13: `apps/web` Gemini AI Hikaye ve Wordle Oyunları
+Uygulamayı eğlenceli kılan gamification unsurları.
+- **AI Story:** Öğrenilen kelimelerden 5-10 tanesini seçerek Gemini API üzerinden İngilizce hikaye üretme ve okuma arayüzü.
+- **Wordle:** Sadece kullanıcının *öğrenmiş olduğu* (IsLearned=true) 5 harfli kelimeler içinden seçilen hedef kelime ile Wordle klonu oynama sayfası.
+
+### 📱 Phase 14: `apps/mobile` Expo Altyapısı ve Auth
+React Native tarafının başlangıcı.
+- **Kurulum:** Expo Router yapısı, NativeWind konfigürasyonu (Tailwind for React Native).
+- **Auth:** Firebase mobil Login/Register ekranları.
+- **Paylaşım:** `packages/shared` modülünün sorunsuz şekilde mobile dahil edilmesi.
+
+### 🚀 Phase 15: `apps/mobile` Core Özelliklerin Entegrasyonu
+Web'deki özelliklerin mobile taşınması.
+- **Görünümler:** Kelime listesi, Quiz kaydırma (Swipe) kartları.
+- **Gamification:** Mobil Wordle arayüzü ve AI Story okuma deneyimi.
+
+---
+
 ## 🤝 Katkı Sağlama
 
 1. Repoyu **fork**'layın
